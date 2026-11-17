@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import type { Schemas } from '@/api/types'
 import { formatTime } from '@/lib/dates'
 
@@ -14,10 +16,12 @@ type PresenceTableProps = {
    * départ oublié un jour passé ; sans lui, une arrivée sans départ est un enfant présent.
    */
   today?: string
+  /** Action sur une ligne (« Corriger », pour la direction) : ajoute une colonne. */
+  action?: (presence: Presence) => ReactNode
 }
 
 /** Une ligne par arrivée, avec qui a pointé et qui a amené ou cherché l'enfant (traçabilité du pointage). */
-export function PresenceTable({ presences, caption, today }: PresenceTableProps) {
+export function PresenceTable({ presences, caption, today, action }: PresenceTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border bg-card">
       <table className="w-full min-w-[40rem] text-left text-sm">
@@ -33,6 +37,11 @@ export function PresenceTable({ presences, caption, today }: PresenceTableProps)
             <th scope="col" className="px-4 py-3 font-medium">
               Départ
             </th>
+            {action !== undefined && (
+              <th scope="col" className="px-4 py-3 font-medium">
+                <span className="sr-only">Correction</span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -45,6 +54,11 @@ export function PresenceTable({ presences, caption, today }: PresenceTableProps)
                   {presence.departed_at === null && !missing && (
                     <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
                       Présent·e
+                    </span>
+                  )}
+                  {presence.corrected && (
+                    <span className="ml-2 rounded-full border px-2 py-0.5 text-xs font-normal text-muted-foreground">
+                      Corrigée
                     </span>
                   )}
                 </th>
@@ -72,6 +86,7 @@ export function PresenceTable({ presences, caption, today }: PresenceTableProps)
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
+                {action !== undefined && <td className="px-4 py-3 text-right">{action(presence)}</td>}
               </tr>
             )
           })}

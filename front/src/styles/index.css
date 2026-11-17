@@ -66,4 +66,8 @@
   body {
     @apply bg-background font-sans text-foreground antialiased;
   }
+  /* Fenêtre modale ouverte : la page derrière ne défile plus (sans style en ligne, refusé par la CSP). */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
 }

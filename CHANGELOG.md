@@ -28,6 +28,7 @@ Chaque ligne cite son ticket Jira `LUN-<n>`.
 - API : présences d'une crèche sur une période (`GET /api/v2/nurseries/{id}/attendance/history`, 7 derniers jours par défaut, 366 au plus) et leur export CSV pour un tableur (séparateur `;`, heures de Paris, formules neutralisées, jamais gardé en cache) (LUN-93).
 - Front v2 : historique des présences d'une crèche, depuis les présences du jour, pour la direction et les employés : période choisie par deux dates ou un raccourci (7 derniers jours, mois en cours, mois précédent), gardée dans l'adresse ; chiffres de la période, un tableau par jour, départs oubliés signalés « Départ non pointé » ; bouton « Exporter en CSV » qui télécharge le fichier de la période affichée, ou affiche le refus de l'API (LUN-92).
 - API : la direction corrige un pointage (heures, personne qui a amené ou cherché l'enfant), ajoute une présence oubliée ou annule une présence pointée sur le mauvais enfant, avec un motif obligatoire, sur les 31 derniers jours. Un départ oublié se ferme ainsi sans toucher à la base, et la tablette accepte de nouveau l'arrivée de l'enfant. Chaque correction est consignée dans un journal (auteur, heure, motif, avant et après) consultable sur une période ; les présences corrigées sont marquées, et l'export CSV gagne une colonne « Corrigé » (LUN-120).
+- Front v2 : la direction corrige les pointages depuis l'historique des présences. Bouton « Corriger » sur chaque présence des 31 derniers jours (heures, personne qui a amené ou cherché l'enfant parmi celles autorisées, motif obligatoire), retrait d'une présence pointée sur le mauvais enfant après confirmation, ajout d'une présence oubliée ; les présences corrigées sont marquées « Corrigée », et le journal des corrections de la période (qui, quand, pourquoi, avant et après) s'affiche sous les tableaux. Les employés ne voient ni les boutons ni le journal (LUN-121).
 
 ### Modifié
 
@@ -36,6 +37,7 @@ Chaque ligne cite son ticket Jira `LUN-<n>`.
 
 ### Sécurité
 
+- Les fenêtres du front v2 utilisent l'élément natif `<dialog>` : le Dialog de Radix injectait une balise `<style>` que la politique de sécurité du contenu refuse, sans l'assouplir (LUN-121).
 - Le blocage du TOTP au 100e échec consécutif ne dépend plus du journal des connexions : la purge ne peut plus le lever (LUN-54).
 
 ### Corrigé

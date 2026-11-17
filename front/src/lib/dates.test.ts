@@ -8,6 +8,7 @@ import {
   formatDay,
   formatLongDay,
   formatTime,
+  parisInstant,
   todayInParis,
 } from './dates'
 
@@ -37,5 +38,15 @@ describe('dates', () => {
   it('écrit un jour du calendrier sans le décaler', () => {
     expect(formatLongDay('2026-10-30')).toBe('vendredi 30 octobre 2026')
     expect(formatDay('2026-11-01')).toBe('1 novembre 2026')
+  })
+
+  it('convertit une heure de Paris en instant, été comme hiver', () => {
+    expect(parisInstant('2026-07-15', '08:30')).toBe('2026-07-15T06:30:00.000Z')
+    expect(parisInstant('2026-10-28', '17:30')).toBe('2026-10-28T16:30:00.000Z')
+    // Jour du passage à l'heure d'hiver : 2 h du matin à Paris, puis l'heure d'hiver.
+    expect(parisInstant('2026-10-25', '01:00')).toBe('2026-10-24T23:00:00.000Z')
+    expect(parisInstant('2026-10-25', '12:00')).toBe('2026-10-25T11:00:00.000Z')
+    // Aller-retour avec l'affichage.
+    expect(formatTime(parisInstant('2026-03-29', '09:15'))).toBe('09:15')
   })
 })

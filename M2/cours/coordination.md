@@ -68,6 +68,35 @@ confirme que suppression, push forcé, PR obligatoire et contrôles obligatoires
 s'appliquent à `develop`, `staging` et `main`. Le comportement sur une vraie PR
 (blocage, contournement de l'administrateur) est **à vérifier** à la prochaine PR.
 
+## TD « Road to MVP » : préparation du stage `[RÉEL]` (2026-11-17)
+
+Un développeur d'un autre groupe fait un stage dans l'équipe : il livre une
+feature fullstack par une PR, en suivant l'onboarding. Le stage ne commence que
+si les outils de pilotage sont prêts. Ticket de préparation : LUN-123 ; US du
+stagiaire : LUN-124 (sous-tâches API et interface), recopiée dans
+l'[issue #86](https://github.com/zharrow/Luniqo/issues/86). Mission et déroulé :
+[docs/stage/](../../docs/stage/README.md).
+
+| Décision (Florent, chef de projet) | Raison | Écarté |
+|---|---|---|
+| Le stagiaire contribue **par un fork**, sans droit d'écriture | Un dépôt personnel n'a pas de rôle intermédiaire : un collaborateur peut pousser, supprimer des branches, approuver les PR des autres, déclencher Vercel. Avec un fork, rien n'est à retirer après le stage | Collaborateur avec règles durcies ; organisation GitHub (transfert du dépôt, intégrations à rebrancher) |
+| **Aucun compte Jira** pour le stagiaire : son US est recopiée dans une issue GitHub étiquetée `stage` | Sur l'offre gratuite, tout compte Jira administre tous les projets | Compte Jira ; offre Standard (payante, décision du propriétaire du site) |
+| CI des forks lancée après l'accord d'un membre de l'équipe, **à chaque exécution** (`all_external_contributors`, au lieu de la première contribution seulement) | Le code d'un fork ne tourne pas sur nos machines sans qu'un humain ait lu le diff | Accord à la première contribution seulement (réglage d'origine) |
+| Étiquetage automatique sauté sur une PR de fork, étiquettes posées à la main | Le jeton d'un fork est en lecture seule : le job échouait | `pull_request_target` (jeton en écriture sur un code non relu) |
+| `staging` : **1 relecture** au lieu de 0 (la décision du 2026-10-27 est remplacée) | Un collaborateur pouvait promouvoir seul en pré-production ; une promotion demande désormais deux personnes | Garder 0 (la validation du chef de projet restait une règle orale) |
+
+**Vérification `[RÉEL]`, 2026-11-17** : `GET /repos/zharrow/Luniqo/actions/permissions/fork-pr-contributor-approval`
+répond `all_external_contributors` ; `GET /repos/zharrow/Luniqo/rules/branches/staging`
+répond `required_approving_review_count` = 1 (export dans
+[.github/rulesets/staging.json](../../.github/rulesets/staging.json)) ; étiquette
+`stage` et issue #86 créées.
+
+**À vérifier le jour du stage**, avec le compte du stagiaire : sa CI attend
+l'accord ; il ne peut ni pousser sur le dépôt ni approuver une PR ; sa PR fait
+avancer LUN-124 dans Jira. **À vérifier par Florent** : protection des forks
+activée dans Vercel (*Git Fork Protection*), pour qu'aucune prévisualisation
+de la v1 ne se construise avec ses variables sans accord.
+
 ## Assistance déclarée
 
 L'assistant (Claude Code) a rédigé le README, CONTRIBUTING, le CHANGELOG, le
@@ -77,7 +106,11 @@ groupe. Florent a validé chaque décision ; la configuration de Jira est faite
 par l'équipe en suivant le guide. Le 2026-10-27, l'assistant a appliqué les
 protections des branches sur GitHub (via `gh api`), après avoir proposé les
 options à Florent, qui les a choisies ; il a rédigé la section correspondante
-de CONTRIBUTING et cette fiche.
+de CONTRIBUTING et cette fiche. Le 2026-11-17, pour la préparation du stage,
+une session de l'assistant a rédigé le document de conception et appliqué la
+relecture de `staging` ; une autre a créé les tickets Jira et l'issue du
+stagiaire, appliqué le réglage des forks et l'étiquette `stage`, et rédigé
+l'onboarding mis à jour et `docs/stage/`. Florent a pris chaque décision.
 
 ## Reste à faire
 
@@ -85,6 +118,9 @@ de CONTRIBUTING et cette fiche.
 - [ ] Relier Jira à GitHub et vérifier le panneau Développement.
 - [x] Protections des branches, tags de version protégés, branche par défaut `develop`, suppression automatique des branches fusionnées (2026-10-27).
 - [ ] Vérifier les protections sur une vraie PR : fusion bloquée sans relecture ni CI pour un membre de l'équipe, contournement par PR pour l'administrateur.
+- [x] Stage, outils prêts : accès par fork, issue #86, onboarding mis à jour, modèles de rapport (2026-11-17, LUN-123).
+- [ ] Stage : vérifications avec le compte du stagiaire, protection des forks dans Vercel, rapports de fin de stage.
+- [ ] TD « Road to MVP », reste du barème : story map v2 et personas imposés, US de l'équipe, stories induites par les personas, stratégie de gestion des erreurs, sprints Jira.
 - [ ] Première version `v0.1.0` par le circuit complet : préparation → `develop` → `staging` (`v0.1.0-rc.1`) → `main` (`v0.1.0`).
 - [x] Bonus du prof : [personas](../../docs/produit/PERSONAS.md) (4, fictifs) et [story map](../../docs/produit/STORY-MAP.md) avec la découpe du MVP (2026-10-09).
 - [x] Diagrammes Mermaid de la stratégie de branches, suggérés par le prof : cycle du ticket, circuit complet (`gitGraph` avec recette refusée et correctif urgent), flux entre environnements, dans [CONTRIBUTING.md](../../CONTRIBUTING.md). Rendu vérifié avec mermaid-cli 12.0.0.

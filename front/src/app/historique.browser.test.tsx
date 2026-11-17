@@ -13,6 +13,7 @@ import { App, createApp } from './app'
 const director = { ...owner, mfa: 'verified' as const }
 const HISTORY = `/api/v2/nurseries/${nursery.id}/attendance/history`
 const PAGE = `/creches/${nursery.id}/presences/historique`
+const CORRECTIONS = `/api/v2/nurseries/${nursery.id}/attendance/corrections`
 
 async function start(url: string) {
   const app = createApp(createMemoryHistory({ initialEntries: [url] }))
@@ -61,7 +62,8 @@ describe('historique des présences', () => {
       .element(screen.getByRole('heading', { name: 'Historique des présences · Crèche Démo Nord' }))
       .toBeVisible()
     // Même période par défaut que l'API, calculée sur le jour de Paris.
-    expect(asked).toEqual([lastDays(todayInParis())])
+    // Le titre vient de la crèche, déjà en cache : la requête de l'historique peut arriver juste après.
+    await expect.poll(() => asked).toEqual([lastDays(todayInParis())])
     await expect
       .element(screen.getByRole('button', { name: '7 derniers jours' }))
       .toHaveAttribute('aria-pressed', 'true')
@@ -78,6 +80,7 @@ describe('historique des présences', () => {
     worker.use(
       http.get('/api/v2/auth/me', () => HttpResponse.json(director)),
       http.get(`/api/v2/nurseries/${nursery.id}`, () => HttpResponse.json(nursery)),
+      http.get(CORRECTIONS, () => HttpResponse.json([])),
       http.get(HISTORY, ({ request }) => {
         asked.push(periodOf(request))
         return HttpResponse.json([])
@@ -89,7 +92,8 @@ describe('historique des présences', () => {
 
     const month = previousMonth(todayInParis())
     await expect.poll(() => app.router.state.location.search).toEqual({ du: month.from, au: month.to })
-    expect(asked.at(-1)).toEqual(month)
+    // L'adresse change avant que la requête de la nouvelle période n'arrive à l'API simulée.
+    await expect.poll(() => asked.at(-1)).toEqual(month)
     // Le formulaire reprend la période choisie.
     await expect.element(screen.getByLabelText('Du')).toHaveValue(month.from)
     await expect.element(screen.getByLabelText('Au')).toHaveValue(month.to)
@@ -100,6 +104,7 @@ describe('historique des présences', () => {
     worker.use(
       http.get('/api/v2/auth/me', () => HttpResponse.json(director)),
       http.get(`/api/v2/nurseries/${nursery.id}`, () => HttpResponse.json(nursery)),
+      http.get(CORRECTIONS, () => HttpResponse.json([])),
       http.get(HISTORY, ({ request }) => {
         asked.push(periodOf(request))
         return HttpResponse.json(periodAttendance)
@@ -120,6 +125,7 @@ describe('historique des présences', () => {
     worker.use(
       http.get('/api/v2/auth/me', () => HttpResponse.json(director)),
       http.get(`/api/v2/nurseries/${nursery.id}`, () => HttpResponse.json(nursery)),
+      http.get(CORRECTIONS, () => HttpResponse.json([])),
       http.get(HISTORY, () => HttpResponse.json(periodAttendance)),
       http.get(`${HISTORY}.csv`, ({ request }) => {
         exported = periodOf(request)
@@ -145,6 +151,7 @@ describe('historique des présences', () => {
     worker.use(
       http.get('/api/v2/auth/me', () => HttpResponse.json(director)),
       http.get(`/api/v2/nurseries/${nursery.id}`, () => HttpResponse.json(nursery)),
+      http.get(CORRECTIONS, () => HttpResponse.json([])),
       http.get(HISTORY, () => HttpResponse.json(periodAttendance)),
       http.get(`${HISTORY}.csv`, () =>
         HttpResponse.json({ detail: 'Action non autorisée pour ce rôle' }, { status: 403 }),

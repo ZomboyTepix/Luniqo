@@ -112,6 +112,25 @@ jour quand la période changeait dans l'adresse (React Compiler actif, cause non
 cherchée plus loin). Le formulaire est remonté avec une `key` tirée de la période,
 et part de `defaultValues` (LUN-92, 2026-11-05).
 
+Sous forte charge de la machine (autres applications), les tests dans le
+navigateur peuvent dépasser leur délai, et ce n'est jamais le même qui échoue
+(2026-11-17 : suite en 65 s au lieu de 7 s). Relancer avec
+`corepack pnpm test --no-file-parallelism` avant de chercher un défaut. Une
+requête lue juste après un changement d'adresse doit être attendue
+(`expect.poll`), pas lue tout de suite.
+
+Si Playwright ne trouve plus son Chromium (`Executable doesn't exist`), le
+réinstaller : `corepack pnpm exec playwright install chromium`.
+
+### Fenêtres modales
+
+`src/components/ui/dialog.tsx` repose sur l'élément natif `<dialog>`
+(`showModal()`), pas sur le Dialog de Radix : celui-ci écrit une balise `<style>`
+pour bloquer le défilement, et notre CSP (`style-src 'self'`) la refuse
+(LUN-121). Un autre composant Radix qui écrirait du style en ligne poserait le
+même problème : le parcours Playwright, qui exige une console sans erreur, le
+signale.
+
 ### shadcn/ui
 
 Les composants s'ajoutent avec la CLI (`pnpm dlx shadcn@<version> add …`) et

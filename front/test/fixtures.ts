@@ -199,3 +199,117 @@ export const periodAttendance: Schemas['AttendanceOut'][] = [
   },
   ...dayAttendance,
 ]
+
+function guardianLink(
+  id: string,
+  first_name: string,
+  last_name: string,
+  is_authorized_pickup: boolean,
+  relationship: Schemas['Relationship'] = 'parent',
+): Schemas['ChildGuardianOut'] {
+  return {
+    guardian: {
+      id,
+      family_id: '00000000-0000-4000-8000-0000000000e1',
+      first_name,
+      last_name,
+      email: null,
+      phone: null,
+      has_account: false,
+      is_active: true,
+    },
+    relationship,
+    has_parental_authority: relationship === 'parent',
+    is_authorized_pickup,
+    is_emergency_contact: true,
+  }
+}
+
+/** Enfants de la crèche (`GET /api/v2/nurseries/{id}/children`). */
+export const nurseryChildren: Schemas['ChildOut'][] = [
+  {
+    id: '00000000-0000-4000-8000-0000000000d1',
+    family_id: '00000000-0000-4000-8000-0000000000e1',
+    nursery_id: nursery.id,
+    first_name: 'Léo',
+    last_name: 'Garnier',
+    birth_date: '2024-03-12',
+    status: 'active',
+    enrollment_date: '2025-09-01',
+    exit_date: null,
+  },
+  {
+    id: '00000000-0000-4000-8000-0000000000d2',
+    family_id: '00000000-0000-4000-8000-0000000000e2',
+    nursery_id: nursery.id,
+    first_name: 'Emma',
+    last_name: 'Lambert',
+    birth_date: '2023-11-02',
+    status: 'active',
+    enrollment_date: '2025-09-01',
+    exit_date: null,
+  },
+]
+
+/** Fiche de Léo (`GET …/children/{id}`) : ses deux parents peuvent venir le chercher. */
+export const leoDetail: Schemas['ChildDetail'] = {
+  ...(nurseryChildren[0] as Schemas['ChildOut']),
+  guardians: [
+    guardianLink('00000000-0000-4000-8000-0000000000f1', 'Alice', 'Garnier', true),
+    guardianLink('00000000-0000-4000-8000-0000000000f2', 'Karim', 'Garnier', true),
+  ],
+}
+
+/** Fiche d'Emma : Jeanne, une proche, n'est pas autorisée à venir la chercher. */
+export const emmaDetail: Schemas['ChildDetail'] = {
+  ...(nurseryChildren[1] as Schemas['ChildOut']),
+  guardians: [
+    guardianLink('00000000-0000-4000-8000-0000000000f3', 'Sophie', 'Lambert', true),
+    guardianLink('00000000-0000-4000-8000-0000000000f4', 'Jeanne', 'Lambert', false, 'other'),
+  ],
+}
+
+/** Journal des corrections d'une période (`GET …/attendance/corrections`). */
+export const corrections: Schemas['CorrectionOut'][] = [
+  {
+    id: '00000000-0000-4000-8000-000000000a01',
+    attendance_id: '00000000-0000-4000-8000-0000000000c2',
+    child_id: '00000000-0000-4000-8000-0000000000d1',
+    child_name: 'Léo Garnier',
+    day: '2026-10-29',
+    kind: 'modified',
+    reason: 'Départ pointé en retard',
+    corrected_at: '2026-10-30T09:12:00Z',
+    corrected_by: 'Camille Martin',
+    before: {
+      arrived_at: '2026-10-29T07:40:00Z',
+      departed_at: '2026-10-29T16:20:00Z',
+      dropped_off_by: 'Alice Garnier',
+      picked_up_by: 'Alice Garnier',
+    },
+    after: {
+      arrived_at: '2026-10-29T07:40:00Z',
+      departed_at: '2026-10-29T16:05:00Z',
+      dropped_off_by: 'Alice Garnier',
+      picked_up_by: 'Alice Garnier',
+    },
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000a02',
+    attendance_id: null,
+    child_id: '00000000-0000-4000-8000-0000000000d2',
+    child_name: 'Emma Lambert',
+    day: '2026-10-29',
+    kind: 'cancelled',
+    reason: 'Pointée sur le mauvais enfant',
+    corrected_at: '2026-10-30T09:20:00Z',
+    corrected_by: 'Camille Martin',
+    before: {
+      arrived_at: '2026-10-29T08:00:00Z',
+      departed_at: '2026-10-29T08:02:00Z',
+      dropped_off_by: null,
+      picked_up_by: null,
+    },
+    after: null,
+  },
+]

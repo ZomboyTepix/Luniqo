@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { errorMessage } from '@/api/errors'
 import type { Schemas } from '@/api/types'
 import { FormError } from '@/components/form-error'
@@ -13,10 +15,12 @@ type HistoryBoardProps = {
   today: string
   pending: boolean
   error: unknown
+  /** Action sur chaque présence (« Corriger », pour la direction). */
+  action?: (presence: Schemas['AttendanceOut']) => ReactNode
 }
 
 /** Présences d'une période : chiffres, puis un tableau par jour, du plus ancien au plus récent. */
-export function HistoryBoard({ presences, today, pending, error }: HistoryBoardProps) {
+export function HistoryBoard({ presences, today, pending, error, action }: HistoryBoardProps) {
   if (pending) return <p className="text-muted-foreground">Chargement de l&apos;historique…</p>
   if (error !== null && error !== undefined) return <FormError message={errorMessage(error)} />
   if (presences === undefined || presences.length === 0) {
@@ -38,7 +42,7 @@ export function HistoryBoard({ presences, today, pending, error }: HistoryBoardP
         return (
           <section key={day} aria-label={title} className="grid gap-2">
             <h2 className="text-lg font-medium">{title}</h2>
-            <PresenceTable presences={ofDay} caption={`Présences du ${date}`} today={today} />
+            <PresenceTable presences={ofDay} caption={`Présences du ${date}`} today={today} action={action} />
           </section>
         )
       })}

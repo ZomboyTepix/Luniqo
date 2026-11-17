@@ -210,3 +210,60 @@ test("historique des présences : la journée de Léo, puis l'export CSV téléc
   await expect(page.getByText('Aucune arrivée pointée sur cette période.')).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test('direction : présence oubliée ajoutée, corrigée puis retirée, chaque étape au journal', async ({ page }) => {
+  const errors = watchConsole(page)
+  const backupCode = backupCodes.shift()
+  test.skip(backupCode === undefined, "Codes de secours absents : le parcours d'activation doit passer avant.")
+  await page.goto('/connexion')
+  await login(page, 'direction@demo.test')
+  await page.getByLabel('Code à 6 chiffres ou code de secours').fill(backupCode ?? '')
+  await page.getByRole('button', { name: 'Valider' }).click()
+  await page.getByRole('link', { name: 'Présences de Crèche Démo Nord' }).click()
+  await page.getByRole('link', { name: 'Historique et export' }).click()
+  await expect(page.getByRole('heading', { name: 'Journal des corrections' })).toBeVisible()
+  await expect(page.getByText('Aucune correction sur cette période.')).toBeVisible()
+
+  // Hier à Paris : toujours dans le délai de 31 jours, et jamais dans le futur.
+  const yesterday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(
+    new Date(Date.now() - 86_400_000),
+  )
+  await page.getByRole('button', { name: 'Ajouter une présence oubliée' }).click()
+  const addition = page.getByRole('dialog', { name: 'Ajouter une présence oubliée' })
+  await addition.getByLabel('Enfant', { exact: true }).selectOption({ label: 'Emma Lambert' })
+  await expect(addition.getByRole('option', { name: 'Sophie Lambert' }).first()).toBeAttached()
+  await addition.getByLabel('Jour').fill(yesterday)
+  await addition.getByLabel('Arrivée').fill('08:15')
+  await addition.getByLabel(/^Départ/).fill('16:00')
+  await addition.getByLabel('Parti·e avec').selectOption({ label: 'Sophie Lambert' })
+  await addition.getByLabel("Motif de l'ajout").fill('Tablette en panne ce matin-là')
+  await addition.getByRole('button', { name: 'Ajouter la présence' }).click()
+  await expect(addition).toBeHidden()
+
+  // La présence ajoutée est marquée, et le journal garde l'auteur et le motif.
+  const emma = page.getByRole('row', { name: /Emma Lambert/ })
+  await expect(emma).toContainText('Corrigée')
+  await expect(emma).toContainText('parti·e avec Sophie L.')
+  await expect(page.getByText('Motif : Tablette en panne ce matin-là')).toBeVisible()
+  await expect(page.getByText(/^Par Camille Martin, le /)).toBeVisible()
+
+  // Arrivée corrigée : seule l'heure change.
+  await page.getByRole('button', { name: 'Corriger la présence de Emma Lambert, arrivée à 08:15' }).click()
+  const correction = page.getByRole('dialog', { name: 'Corriger la présence' })
+  await correction.getByLabel('Arrivée').fill('08:00')
+  await correction.getByLabel('Motif de la correction').fill('Arrivée réelle à 8 h')
+  await correction.getByRole('button', { name: 'Enregistrer la correction' }).click()
+  await expect(correction).toBeHidden()
+  await expect(page.getByText('Arrivée : 08:15 → 08:00')).toBeVisible()
+
+  // Retrait : la présence disparaît de l'historique, le journal la garde.
+  await page.getByRole('button', { name: 'Corriger la présence de Emma Lambert, arrivée à 08:00' }).click()
+  await correction.getByRole('button', { name: 'Retirer cette présence…' }).click()
+  await correction.getByLabel('Motif du retrait').fill('Pointée sur le mauvais enfant')
+  await correction.getByRole('button', { name: 'Retirer la présence' }).click()
+  await expect(correction).toBeHidden()
+  await expect(emma).toHaveCount(0)
+  await expect(page.getByText(/^Présence retirée · Emma Lambert/)).toBeVisible()
+  await expect(page.getByRole('listitem').filter({ hasText: /^Présence/ })).toHaveCount(3)
+  expect(errors).toEqual([])
+})

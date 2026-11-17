@@ -9,6 +9,7 @@ Chaque ligne cite son ticket Jira `LUN-<n>`.
 
 ### Ajouté
 
+- API : résumé de chaque crèche (`GET /api/v2/nurseries/{id}/summary`) avec les enfants accueillis (actifs et en adaptation), présents du jour à Paris et employés actifs ayant accès ; mêmes contrôles d'accès que la lecture d'une crèche (LUN-124).
 - Historique des fiches de ménage : tâches cochées sur une période, annulées comprises, filtrables par pièce, et export CSV pour un contrôle (tableur en français, formules neutralisées) (LUN-71).
 - Comptes des employés : la direction crée le compte et transmet un lien d'invitation à usage unique, l'employé choisit son mot de passe ; départ d'un salarié avec fermeture immédiate de ses sessions ; changement de mot de passe qui ferme les autres sessions (LUN-55).
 - Documentation de l'API complétée (Swagger, `/api/docs`) : présentation de l'authentification et des conventions, chaque route décrite avec ses erreurs possibles et leurs messages, cookies déclarés comme schémas de sécurité, exemple pour chaque corps de requête ; schéma validé à chaque test (LUN-118).

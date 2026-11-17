@@ -32,11 +32,13 @@ Chaque ligne cite son ticket Jira `LUN-<n>`.
 
 ### Modifié
 
+- Onboarding mis à jour pour le stage du TD « Road to MVP » : matrice des droits, contribution par fork, front v2 (installation, tests, Storybook, contrat de l'API), design system du front v2 ; mission du stage et modèles de rapport (stagiaire, maître de stage) dans `docs/stage/` (LUN-123).
 - La pile Docker retrouve une image `front` distincte : elle construit le front v2 et le sert avec un nginx dédié (politique de sécurité du contenu, cache) ; la passerelle `web` ne fait plus que relayer le front et l'API (LUN-117).
 - La pile Docker sert le front v2 depuis l'image `web` (nginx), avec une politique de sécurité du contenu stricte et un cache adapté ; le conteneur du front Next.js v1 est retiré, la pile compte 4 images. La v1 reste en production sur Vercel jusqu'à la bascule (LUN-107).
 
 ### Sécurité
 
+- Contributions par fork : la CI attend l'accord d'un membre de l'équipe à chaque exécution, l'étiquetage automatique est sauté (sans jeton en écriture) ; `staging` exige désormais une relecture, une promotion en pré-production demande deux personnes (LUN-123).
 - Les fenêtres du front v2 utilisent l'élément natif `<dialog>` : le Dialog de Radix injectait une balise `<style>` que la politique de sécurité du contenu refuse, sans l'assouplir (LUN-121).
 - Le blocage du TOTP au 100e échec consécutif ne dépend plus du journal des connexions : la purge ne peut plus le lever (LUN-54).
 

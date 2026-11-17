@@ -68,7 +68,7 @@ Les règles d'automatisation sont décrites dans [docs/projet/JIRA.md](docs/proj
 | Branche | Environnement | Rôle | Reçoit | Protection |
 |---|---|---|---|---|
 | `develop` | INT (intégration) | ce qui est fini, relu et testé | PR de ticket, report de `main` | PR obligatoire, 1 relecture, CI verte |
-| `staging` | PRÉ-PROD (recette) | version candidate en test métier | promotion de `develop`, report de `main` | PR obligatoire, CI verte ; validation du chef de projet (règle d'équipe) |
+| `staging` | PRÉ-PROD (recette) | version candidate en test métier | promotion de `develop`, report de `main` | PR obligatoire, 1 relecture, CI verte ; validation du chef de projet (règle d'équipe) |
 | `main` | PROD | ce qui est en production, tagué | promotion de `staging`, `hotfix/…` | PR obligatoire, 2 relectures, CI verte, tag de version |
 
 Ces protections sont imposées par GitHub : voir
@@ -197,12 +197,13 @@ Le déploiement de prévisualisation Vercel (front v1) reste facultatif.
 ### Protections des branches (rulesets GitHub)
 
 Mises en place le 2026-10-27 sous forme de *rulesets* (Settings → Rules →
-Rulesets). Avant cette date, aucune branche n'était protégée.
+Rulesets). Avant cette date, aucune branche n'était protégée. Le 2026-11-17,
+`staging` passe de 0 à 1 relecture (voir « Limite sur `staging` »).
 
 | Cible | Push direct | Suppression, push forcé | Relectures | Contrôles obligatoires |
 |---|---|---|---|---|
 | `develop` | refusé | refusés | 1 | les 3 |
-| `staging` | refusé | refusés | 0 | les 3 |
+| `staging` | refusé | refusés | 1 | les 3 |
 | `main` | refusé | refusés | 2 | les 3 |
 | tags `v*` | — | suppression et déplacement refusés | — | — |
 
@@ -228,9 +229,11 @@ soumis à toutes les règles.
 
 **Limite sur `staging`.** Sur un dépôt personnel, GitHub ne permet pas de
 réserver la fusion à une personne : c'est une fonction des organisations. La
-« validation du chef de projet » reste donc une règle d'équipe. Techniquement,
-toute personne ayant le droit d'écriture peut fusionner une promotion dont la
-CI est verte.
+« validation du chef de projet » reste donc une règle d'équipe. Jusqu'au
+2026-11-17, toute personne ayant le droit d'écriture pouvait fusionner seule une
+promotion dont la CI était verte. Depuis, une approbation est exigée : une
+promotion demande deux personnes, celle qui l'ouvre et celle qui l'approuve
+(décision de Florent, préparation du stage).
 
 **Tags.** Un tag `v*` posé ne peut être ni supprimé ni déplacé : une version
 publiée désigne toujours le même commit, ce qui garantit le
@@ -304,10 +307,29 @@ automatiquement. Titre au format d'un commit, avec la clé. Une PR = un ticket.
 On ne fait jamais partir une branche d'une autre branche de travail (PR
 empilées) : toujours de `develop`.
 
-**Relecture** : au moins une personne pour `develop`, deux pour `main`, imposé
+**Relecture** : au moins une personne pour `develop` et `staging`, deux pour `main`, imposé
 par GitHub ([Protections des branches](#protections-des-branches-rulesets-github)). Une
 modification du front est relue de préférence par Pauline ou Thomas, une du
 back par Julien ou Thomas.
+
+### Contribuer depuis un fork
+
+Un contributeur sans droit d'écriture (un stagiaire, par exemple) travaille
+dans son fork et ouvre sa PR vers `develop` de `zharrow/Luniqo`. Les règles
+sont les mêmes : branche `<préfixe>/LUN-<n>-…` (dans le fork, jamais `main`),
+titre avec la clé, modèle rempli. Ce qui change, décidé le 2026-11-17 :
+
+- **la CI attend l'accord d'un membre de l'équipe** à chaque exécution
+  (Settings → Actions → « Require approval for all external contributors ») :
+  le code d'un fork ne tourne pas sur nos machines sans qu'un humain l'ait vu.
+  Le relecteur lit le diff, puis clique sur *Approve and run* ;
+- l'étiquetage automatique est sauté (jeton en lecture seule pour un fork) :
+  le relecteur pose les étiquettes à la main ;
+- la branche du fork ne fait pas passer le ticket « En cours » dans Jira :
+  le chef de projet le passe à la main ; la PR, qui porte la clé, le fait
+  avancer ensuite.
+
+Le parcours pas à pas est dans [ONBOARDING.md](ONBOARDING.md#5-premier-ticket--de-la-branche-à-la-pr-fusionnée).
 
 ## 5. Definition of Done
 
